@@ -7,7 +7,7 @@ import java.io.IOException;
 import java.io.File;
 
 public class Main {
-    private static final int EXECUTION_TIME_THRESHOLD_MS = 5000; // Umbral de 5 segundos
+    private static final int EXECUTION_TIME_THRESHOLD_MS = 5000;
 
     public static void main(String[] args) {
         executeSparseMultiplication("../results/sparse_results.csv");
