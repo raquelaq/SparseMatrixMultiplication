@@ -3,7 +3,7 @@
 ## Introduction
 
 Matrix multiplication is a core operation in various scientific and engineering applications, from machine learning to physical system simulations. Given its computational intensity, optimizing matrix multiplication can significantly improve performance in data-intensive applications. This project investigates and compares different optimization techniques for matrix multiplication, focusing on both dense and sparse matrices. Sparse matrices, characterized by a high proportion of zero elements, offer unique opportunities for optimization, as many computations can be skipped, reducing both computation time and memory usage.
-Additionally, there is a scientific paper detailing the methodology and experiments conducted throughout this study, providing further insight into the procedures and results obtained. You can find it [here](Benchmarking_paper.pdf).
+Additionally, there is a scientific paper detailing the methodology and experiments conducted throughout this study, providing further insight into the procedures and results obtained. You can find it [here](SparseMatrixPaper.pdf).
 ## Optimization Techniques
 
 The project implements and benchmarks several optimization techniques:
