@@ -10,7 +10,7 @@ public class Main {
     private static final int EXECUTION_TIME_THRESHOLD_MS = 5000; // Umbral de 5 segundos
 
     public static void main(String[] args) {
-        executeSparseMultiplication("../sparse_results.csv");
+        executeSparseMultiplication("../results/sparse_results.csv");
     }
 
     private static void executeSparseMultiplication(String outputPath) {

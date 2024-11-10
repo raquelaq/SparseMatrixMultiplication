@@ -11,10 +11,10 @@ public class Main {
     private static final int EXECUTION_TIME_THRESHOLD_MS = 5000;
 
     public static void main(String[] args) {
-        executeAlgorithm("Java Basic", Main::basicMultiplication, "../basic_results.csv");
-        executeAlgorithm("Java Strassen", StrassenMatrixMultiplication::strassenMultiply, "../strassen_results.csv");
-        executeAlgorithm("Java Unrolled", UnrolledMatrixMultiplication::unrolledMatrixMultiplication, "../unrolled_results.csv");
-        executeAlgorithm("Java Cache", CacheOptimizedMatrixMultiplication::cacheOptimizedMultiply, "../cache_results.csv");
+        executeAlgorithm("Java Basic", Main::basicMultiplication, "../results/basic_results.csv");
+        executeAlgorithm("Java Strassen", StrassenMatrixMultiplication::strassenMultiply, "../results/strassen_results.csv");
+        executeAlgorithm("Java Unrolled", UnrolledMatrixMultiplication::unrolledMatrixMultiplication, "../results/unrolled_results.csv");
+        executeAlgorithm("Java Cache", CacheOptimizedMatrixMultiplication::cacheOptimizedMultiply, "../results/cache_results.csv");
     }
 
     private static void executeAlgorithm(String algorithmName, MatrixMultiplicationAlgorithm algorithm, String outputPath) {
