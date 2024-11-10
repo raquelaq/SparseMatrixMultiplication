@@ -3,107 +3,72 @@ package org.DenseMatrix;
 import static org.DenseMatrix.matrixMultiplication.*;
 import java.lang.management.ManagementFactory;
 import com.sun.management.OperatingSystemMXBean;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.File;
 
 public class Main {
+    private static final int EXECUTION_TIME_THRESHOLD_MS = 5000;
+
     public static void main(String[] args) {
+        executeAlgorithm("Java Basic", Main::basicMultiplication, "../basic_results.csv");
+        executeAlgorithm("Java Strassen", StrassenMatrixMultiplication::strassenMultiply, "../strassen_results.csv");
+        executeAlgorithm("Java Unrolled", UnrolledMatrixMultiplication::unrolledMatrixMultiplication, "../unrolled_results.csv");
+        executeAlgorithm("Java Cache", CacheOptimizedMatrixMultiplication::cacheOptimizedMultiply, "../cache_results.csv");
+    }
+
+    private static void executeAlgorithm(String algorithmName, MatrixMultiplicationAlgorithm algorithm, String outputPath) {
         Runtime runtime = Runtime.getRuntime();
         OperatingSystemMXBean osBean = ManagementFactory.getPlatformMXBean(OperatingSystemMXBean.class);
 
-        int[] sizes = {10, 50, 100, 200, 300, 400, 500, 600, 700, 800, 900, 1024, 2048, 4096, 8192, 16384, 32768, 65536};
-        for (int size : sizes) {
-            ROWS = size;
-            COLS = size;
-            int[][] A = new int[ROWS][COLS];
-            int[][] B = new int[ROWS][COLS];
+        int[] sizes = {10, 50, 100, 200, 300, 400, 500, 600, 700, 800, 900, 1024, 2048, 4096, 8192, 16384};
 
-            generateMatrix(A, 1, 9);
-            generateMatrix(B, 1, 9);
+        File file = new File(outputPath);
+        boolean fileExists = file.exists();
 
-            // Multiplicación de matrices básica
-            System.out.printf("\n\nBasic Matrix Multiplication - Matrix size: %dx%d\n", size, size);
-            runtime.gc();
-            long memoryBeforeBasic = runtime.totalMemory() - runtime.freeMemory();
-            long startTimeBasic = System.currentTimeMillis();
+        try (FileWriter writer = new FileWriter(file, true)) {
+            if (!fileExists) {
+                writer.write("MatrixSize,ExecutionTime,MemoryUsage,CPUUsage\n");
+            }
 
-            int[][] C_basic = matrixMultiplication(A, B);
+            for (int size : sizes) {
+                System.out.printf("\n%s - Matrix size: %dx%d\n", algorithmName, size, size);
+                int[][] A = new int[size][size];
+                int[][] B = new int[size][size];
+                generateMatrix(A, 1, 9);
+                generateMatrix(B, 1, 9);
 
-            long endTimeBasic = System.currentTimeMillis();
-            long memoryAfterBasic = runtime.totalMemory() - runtime.freeMemory();
-            double executionTimeBasic = endTimeBasic - startTimeBasic;
-            double cpuUsageBasic = osBean.getSystemCpuLoad() * 100;
+                runtime.gc();
+                long memoryBefore = runtime.totalMemory() - runtime.freeMemory();
+                long startTime = System.currentTimeMillis();
 
-            System.out.printf("Execution time (Basic): %.3f milliseconds\n", executionTimeBasic);
-            System.out.printf("Memory used (Basic): %d bytes\n", (memoryAfterBasic - memoryBeforeBasic));
-            System.out.printf("CPU Usage (Basic): %.3f%%\n", cpuUsageBasic);
-            System.out.printf("----------------------------------");
+                int[][] C = algorithm.multiply(A, B);
 
-//            try (FileWriter writer = new FileWriter("../benchmark_results.csv", true)) {
-//                writer.write(String.format("Java Basic,%dx%d,%.3f,%.2f,%.3f\n", size, size, executionTimeBasic,
-//                        (double) (memoryAfterBasic - memoryBeforeBasic) / (1024 * 1024), cpuUsageBasic));
-//            } catch (IOException e) {
-//                System.err.println("Error writing to CSV file: " + e.getMessage());
-//            }
+                long endTime = System.currentTimeMillis();
+                long memoryAfter = runtime.totalMemory() - runtime.freeMemory();
+                double executionTime = endTime - startTime;
+                double cpuUsage = osBean.getSystemCpuLoad() * 100;
+                double memoryUsed = (double) (memoryAfter - memoryBefore) / (1024 * 1024);
 
-            // Multiplicación de matrices con el algoritmo de Strassen
-            System.out.printf("\nStrassen Matrix Multiplication - Matrix size: %dx%d\n", size, size);
-            runtime.gc();
-            long memoryBeforeStrassen = runtime.totalMemory() - runtime.freeMemory();
-            long startTimeStrassen = System.currentTimeMillis();
+                System.out.printf("Execution time (%s): %.3f milliseconds\n", algorithmName, executionTime);
+                System.out.printf("Memory used (%s): %.2f MB\n", algorithmName, memoryUsed);
+                System.out.printf("CPU Usage (%s): %.3f%%\n", algorithmName, cpuUsage);
+                System.out.printf("----------------------------------\n");
 
-            int[][] C_strassen = StrassenMatrixMultiplication.strassenMultiply(A, B);
+                writer.write(String.format("%d,%.3f,%.2f,%.3f\n", size, executionTime, memoryUsed, cpuUsage));
 
-            long endTimeStrassen = System.currentTimeMillis();
-            long memoryAfterStrassen = runtime.totalMemory() - runtime.freeMemory();
-            double executionTimeStrassen = endTimeStrassen - startTimeStrassen;
-            double cpuUsageStrassen = osBean.getSystemCpuLoad() * 100;
-
-            System.out.printf("Execution time (Strassen): %.3f milliseconds\n", executionTimeStrassen);
-            System.out.printf("Memory used (Strassen): %d bytes\n", (memoryAfterStrassen - memoryBeforeStrassen));
-            System.out.printf("CPU Usage (Strassen): %.3f%%\n", cpuUsageStrassen);
-            System.out.printf("----------------------------------");
-
-//            try (FileWriter writer = new FileWriter("../benchmark_results.csv", true)) {
-//                writer.write(String.format("Java Strassen,%dx%d,%.3f,%.2f,%.3f\n", size, size, executionTimeStrassen,
-//                        (double) (memoryAfterStrassen - memoryBeforeStrassen) / (1024 * 1024), cpuUsageStrassen));
-//            } catch (IOException e) {
-//                System.err.println("Error writing to CSV file: " + e.getMessage());
-//            }
-
-            System.out.printf("\nUnrolled Matrix Multiplication - Matrix size: %dx%d\n", size, size);
-            runtime.gc();
-            long memoryBeforeUnrolled = runtime.totalMemory() - runtime.freeMemory();
-            long startTimeUnrolled = System.currentTimeMillis();
-
-            int[][] C_unrolled = UnrolledMatrixMultiplication.unrolledMatrixMultiplication(A, B);
-
-            long endTimeUnrolled = System.currentTimeMillis();
-            long memoryAfterUnrolled = runtime.totalMemory() - runtime.freeMemory();
-            double executionTimeUnrolled = endTimeUnrolled - startTimeUnrolled;
-            double cpuUsageUnrolled = osBean.getSystemCpuLoad() * 100;
-
-            System.out.printf("Execution time (Unrolled): %.3f milliseconds\n", executionTimeUnrolled);
-            System.out.printf("Memory used (Unrolled): %d bytes\n", (memoryAfterUnrolled - memoryBeforeUnrolled));
-            System.out.printf("CPU Usage (Unrolled): %.3f%%\n", cpuUsageUnrolled);
-            System.out.printf("----------------------------------");
-
-            // Multiplicación de matrices con Optimización de Caché
-            System.out.printf("\nCache-Optimized Matrix Multiplication - Matrix size: %dx%d\n", size, size);
-            runtime.gc();
-            long memoryBeforeCacheOpt = runtime.totalMemory() - runtime.freeMemory();
-            long startTimeCacheOpt = System.currentTimeMillis();
-
-            int[][] C_cacheOptimized = CacheOptimizedMatrixMultiplication.cacheOptimizedMultiply(A, B);
-
-            long endTimeCacheOpt = System.currentTimeMillis();
-            long memoryAfterCacheOpt = runtime.totalMemory() - runtime.freeMemory();
-            double executionTimeCacheOpt = endTimeCacheOpt - startTimeCacheOpt;
-            double cpuUsageCacheOpt = osBean.getSystemCpuLoad() * 100;
-
-            System.out.printf("Execution time (Cache-Optimized): %.3f milliseconds\n", executionTimeCacheOpt);
-            System.out.printf("Memory used (Cache-Optimized): %d bytes\n", (memoryAfterCacheOpt - memoryBeforeCacheOpt));
-            System.out.printf("CPU Usage (Cache-Optimized): %.3f%%\n", cpuUsageCacheOpt);
-            System.out.printf("----------------------------------");
+                if (executionTime > EXECUTION_TIME_THRESHOLD_MS) {
+                    System.out.printf("Execution time exceeded threshold for %s at matrix size %dx%d. Skipping further sizes.\n", algorithmName, size, size);
+                    break;
+                }
+            }
+        } catch (IOException e) {
+            System.err.println("Error writing to CSV file: " + e.getMessage());
         }
+    }
+
+    private static int[][] basicMultiplication(int[][] A, int[][] B) {
+        return matrixMultiplication(A, B);
     }
 
     private static void generateMatrix(int[][] matrix, int min, int max) {
@@ -112,5 +77,10 @@ public class Main {
                 matrix[i][j] = (int) (Math.random() * (max - min + 1) + min);
             }
         }
+    }
+
+    @FunctionalInterface
+    interface MatrixMultiplicationAlgorithm {
+        int[][] multiply(int[][] A, int[][] B);
     }
 }
